@@ -174,9 +174,10 @@ hugo new posts/first_post/index-zh-ch.md
 使用以下命令启动网站，并可实时查看本地Markdown文档的渲染情况:
 
 ```bash
-hugo -D # 生成静态博客
+hugo server -D # 生成静态博客，并启动本地博客服务器
 
-hugo server # 启动本地博客服务器
+# 或者 hugo serve -e production -D 
+
 ```
 
 去查看 `http://localhost:1313`.
@@ -210,6 +211,52 @@ hugo
 网站内容可以通过 [Netlify](https://www.netlify.com/) 自动发布和托管 (了解有关[通过 Netlify 进行 HUGO 自动化部署](https://www.netlify.com/blog/2015/07/30/hosting-hugo-on-netlifyinsanely-fast-deploys/) 的更多信息).
 或者, 您可以使用 [AWS Amplify](https://gohugo.io/hosting-and-deployment/hosting-on-aws-amplify/), [Github pages](https://gohugo.io/hosting-and-deployment/hosting-on-github/), [Render](https://gohugo.io/hosting-and-deployment/hosting-on-render/) 以及更多...
 {{< /admonition >}}
+
+### 2.7 托管到GitHub
+
+将博客目录 /public 托管到远程仓库的 gh-pages 分支，并将 gh-pages 分支作为博客站点。
+
+采用 workflows 方式添加分支，在每次main主分支push时，gh-pages都会同步更新，编辑文件：** .github/workflows/gh-pages.yml ** 。 
+
+```yml
+name: github pages
+
+on:
+  push:
+    branches:
+      - main  # Set a branch to deploy
+  pull_request:
+
+jobs:
+  deploy:
+    runs-on: ubuntu-20.04
+    steps:
+      - uses: actions/checkout@v2
+        with:
+          submodules: true  # Fetch Hugo themes (true OR recursive)
+          fetch-depth: 0    # Fetch all history for .GitInfo and .Lastmod
+
+      - name: Setup Hugo
+        uses: peaceiris/actions-hugo@v2
+        with:
+          hugo-version: 'latest'
+          # extended: true
+
+      - name: Build
+        run: hugo --minify
+
+      - name: Deploy
+        uses: peaceiris/actions-gh-pages@v3
+        if: github.ref == 'refs/heads/main'
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          publish_dir: ./public
+```
+
+之后可以将 gh-pages 作为站点，步骤为： Settings -> GitHub Pages -> Check it out here! -> source -> Branch: gh-pages
+
+![gh-pages 页面](./gh-pages.png)
+
 
 ## 3 配置
 
